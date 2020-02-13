@@ -25,7 +25,7 @@ if __name__ == '__main__':
         if len(video_idx) != slide_idx:
             slide_idx += 1
             pages[slide_idx].save(CURRENT_TEMPLATE_PATH, 'PNG')
-            pages[slide_idx].save(NEXT_TEMPLATE_PATH, 'PNG')
+            pages[slide_idx + 1].save(NEXT_TEMPLATE_PATH, 'PNG')
         
         success, frame = vidcap.read()
         print(vidcap.get(cv2.CAP_PROP_POS_FRAMES))

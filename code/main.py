@@ -1,46 +1,41 @@
 from pdf2image import convert_from_path
 from os import path
-from calc_sim import SimilarityHandler
-from img_find import ImgFindHandler
+from hashed_dist import HashedDistHandler
 from env import IMG_ROOT_PATH, PDF_ROOT_PATH, VIDEO_ROOT_PATH
 import cv2
+from PIL import Image
 import numpy as np
 
-TEMPLATE_PATH = path.join(IMG_ROOT_PATH, 'template.png')
+CURRENT_TEMPLATE_PATH = path.join(IMG_ROOT_PATH, 'cur_template.png')
+NEXT_TEMPLATE_PATH = path.join(IMG_ROOT_PATH, 'next_template.png')
 
 if __name__ == '__main__':
-    sh = SimilarityHandler()
-    ifh = ImgFindHandler()
+    hdh = HashedDistHandler()
     pages = convert_from_path(path.join(PDF_ROOT_PATH, 'sample.pdf'))
-    for idx, page in enumerate(pages):
-        page.save(TEMPLATE_PATH, 'PNG')
-        matched_ones = {}
+    video_idx = [0]
+    slide_idx = 0
+    pages[slide_idx].save(CURRENT_TEMPLATE_PATH, 'PNG')
+    pages[slide_idx + 1].save(NEXT_TEMPLATE_PATH, 'PNG')
+    
+    vidcap = cv2.VideoCapture(path.join(VIDEO_ROOT_PATH, 'sample1.mov'))
+    print(f'fps: {vidcap.get(cv2.CAP_PROP_FPS)}')
+    print(f'total frame: {vidcap.get(cv2.CAP_PROP_FRAME_COUNT)}')
+    
+    while slide_idx < len(pages):
+        if len(video_idx) != slide_idx:
+            slide_idx += 1
+            pages[slide_idx].save(CURRENT_TEMPLATE_PATH, 'PNG')
+            pages[slide_idx].save(NEXT_TEMPLATE_PATH, 'PNG')
         
-        
-        vidcap= cv2.VideoCapture(path.join(VIDEO_ROOT_PATH, 'sample2.mp4'))
-        template = cv2.imread(TEMPLATE_PATH)
-        print(f'frame rate: {vidcap.get(5)}')
+        success, frame = vidcap.read()
+        print(vidcap.get(cv2.CAP_PROP_POS_FRAMES))
+        if not success: break
+        target = Image.fromarray(np.uint8(frame))
+        cur_template = Image.fromarray(np.uint8(cv2.imread(CURRENT_TEMPLATE_PATH)))
+        next_template = Image.fromarray(np.uint8(cv2.imread(NEXT_TEMPLATE_PATH)))
+        if hdh.calcHammingDist(target, next_template) < hdh.calcHammingDist(target, cur_template):
+            video_idx.append(vidcap.get(cv2.CAP_PROP_POS_FRAMES))
+            print(f'idx is now {len(video_idx)}')
+        print(f'Dist {len(video_idx) - 1}: {hdh.calcHammingDist(target, cur_template)}, {len(video_idx)}: {hdh.calcHammingDist(target, next_template)}')
 
-        while True:
-            success, frame = vidcap.read()
-            if not success: 
-                print(f'slide {idx} not found')
-                break
-            res = ifh.isDetected(frame, template, 0.7)
-            #if not len(res[0]): 
-            #    continue
-            print(f'slide{idx}: {vidcap.get(cv2.CAP_PROP_POS_FRAMES)}')
-            break
-    #for i in range(len(pages)):
-    #    best_score = float('inf')
-    #    idx = 0
-    #    for j in range(len(pages)):
-    #        im1, im2 = np.asarray(pages[i]), np.asarray(pages[j])
-    #        sim_score = sh.calcEuclidDistance(im1, im2)
-    #        if sim_score < best_score:
-    #            best_score = sim_score
-    #            idx = j
-
-    #    matched_ones[idx] = best_score
-
-    #print(matched_ones)
+    print(video_idx)

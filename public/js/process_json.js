@@ -4,8 +4,7 @@ window.onload = function()
 		let i = 0;
 		$('p#click_handler').click(function() {
 			i = (i + 1) % Object.keys(data).length;
-			player.seekTo(data[i] / 20);
-			console.log(data[i]);
+			player.seekTo(data[i]);
 		});
 		
 		function parseAndShowJson(data) 

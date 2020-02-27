@@ -1,11 +1,22 @@
-$.getJSON('../json/sample.json', function(data) {
-	var items = [];
-	parseAndShowJson(data);
-});
-
-function parseAndShowJson(data) 
+window.onload = function()
 {
-	$.each(data, function(key, val) {
-		console.log(key, val);
+	$.getJSON('../json/sample.json', function(data) {
+		let i = 0;
+		$('p#click_handler').click(function() {
+			i = (i + 1) % Object.keys(data).length;
+			player.seekTo(data[i] / 20);
+			console.log(data[i]);
+		});
+		
+		function parseAndShowJson(data) 
+		{
+			$.each(data, function(key, val) {
+				console.log(key, val);
+			});
+		}
 	});
-}
+	
+	
+};
+
+

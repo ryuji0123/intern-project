@@ -2,8 +2,8 @@ from pdf2image import convert_from_path
 from os import path
 from hashed_dist import HashedDistHandler
 from env import IMG_ROOT_PATH, PDF_ROOT_PATH, VIDEO_ROOT_PATH
-import cv2
 from PIL import Image
+import cv2
 import numpy as np
 
 CURRENT_TEMPLATE_PATH = path.join(IMG_ROOT_PATH, 'cur_template.png')

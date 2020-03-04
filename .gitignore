@@ -70,3 +70,5 @@ node_modules/
 # videos
 videos/
 public/video
+public/img
+public/pdf

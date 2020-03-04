@@ -4,6 +4,9 @@ class HashedDistHandler(object):
     def calcHammingDist(self, target, img):
         return imagehash.average_hash(target) - imagehash.average_hash(img)
 
+    def calcHammingDistBetweenImageAndHash(self, target, img):
+        return imagehash.hex_to_hash(target) - imagehash.average_hash(img)
+
     def setFrame(self, frame):
         self.frame = frame
 

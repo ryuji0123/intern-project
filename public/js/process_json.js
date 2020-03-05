@@ -59,7 +59,6 @@ $.getJSON('../json/length.json', function(data)
 	    	function showSlides() {
 	    	    let i;
 	    	    let slides = document.getElementsByClassName('slide');
-				//let dots = document.getElementsByClassName('dot');
 	    	    if (slide_index > slides.length) {
 	    	        slide_index = 1;
 	    	    }
@@ -71,11 +70,7 @@ $.getJSON('../json/length.json', function(data)
 	    	        slides[i].style.display = 'none';
 	    	    }
 
-	    	    //for (i = 0; i < dots.length; i++) {
-	    	    //    dots.className = dots[i].className.replace('active', '');
-	    	    //}
 	    	    slides[slide_index - 1].style.display = 'block';
-	    	    //dots[slide_index - 1].className += ' active';
 	    	}
 
 			function currentSlide(n)

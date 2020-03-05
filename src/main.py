@@ -31,6 +31,8 @@ if __name__ == '__main__':
         print(vidcap.get(cv2.CAP_PROP_POS_FRAMES))
         if not success: break
         target = Image.fromarray(np.uint8(frame))
+        print(target.height, target.width)
+        exit()
         cur_template = Image.fromarray(np.uint8(cv2.imread(CURRENT_TEMPLATE_PATH)))
         next_template = Image.fromarray(np.uint8(cv2.imread(NEXT_TEMPLATE_PATH)))
         if hdh.calcHammingDist(target, next_template) < hdh.calcHammingDist(target, cur_template):

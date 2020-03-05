@@ -22,12 +22,12 @@ if __name__ == '__main__':
         frame = Image.fromarray(np.uint8(cv2.imread(CURRENT_TEMPLATE_PATH)))
         dist = float('inf')
         for d in data:
-            if hdh.calcHammingDistBetweenImageAndHash(data[d], frame) < dist:
+            if hdh.calcHammingDistBetweenImageAndHash(data[d], frame) < dist and d not in ref:
                 seconds = d
                 dist = hdh.calcHammingDistBetweenImageAndHash(data[d], frame)
-        
+
         ref.append(seconds)
         if len(ref) == len(data): break
-
+    print(ref)
     with open('../public/json/matched.json', 'w') as f:
         json.dump(ref, f)

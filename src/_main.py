@@ -2,8 +2,8 @@ from pdf2image import convert_from_path
 from os import path
 from hashed_dist import HashedDistHandler
 from env import IMG_ROOT_PATH, PDF_ROOT_PATH, VIDEO_ROOT_PATH
-import cv2
 from PIL import Image
+import cv2
 import numpy as np
 
 CURRENT_TEMPLATE_PATH = path.join(IMG_ROOT_PATH, 'cur_template.png')
@@ -31,6 +31,8 @@ if __name__ == '__main__':
         print(vidcap.get(cv2.CAP_PROP_POS_FRAMES))
         if not success: break
         target = Image.fromarray(np.uint8(frame))
+        print(target.height, target.width)
+        exit()
         cur_template = Image.fromarray(np.uint8(cv2.imread(CURRENT_TEMPLATE_PATH)))
         next_template = Image.fromarray(np.uint8(cv2.imread(NEXT_TEMPLATE_PATH)))
         if hdh.calcHammingDist(target, next_template) < hdh.calcHammingDist(target, cur_template):

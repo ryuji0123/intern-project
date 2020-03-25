@@ -1,43 +1,54 @@
-from pdf2image import convert_from_path
-from os import path
+import json
 from hashed_dist import HashedDistHandler
-from env import IMG_ROOT_PATH, PDF_ROOT_PATH, VIDEO_ROOT_PATH
+from youtube_ping import YoutubePing
+from download_video import VideoHandler
+from env import IMG_ROOT_PATH, VIDEO_ROOT_PATH, SAMPLE_IMG_ROOT_PATH, SAMPLE_JSON_ROOT_PATH
 from PIL import Image
+from os import path
 import cv2
+import pafy
 import numpy as np
 
-CURRENT_TEMPLATE_PATH = path.join(IMG_ROOT_PATH, 'cur_template.png')
-NEXT_TEMPLATE_PATH = path.join(IMG_ROOT_PATH, 'next_template.png')
+ref = {}
+IMG_PATH = path.join(SAMPLE_IMG_ROOT_PATH, '{}{}.png')
 
 if __name__ == '__main__':
-    hdh = HashedDistHandler()
-    pages = convert_from_path(path.join(PDF_ROOT_PATH, 'sample.pdf'))
-    video_idx = [0]
-    slide_idx = 0
-    pages[slide_idx].save(CURRENT_TEMPLATE_PATH, 'PNG')
-    pages[slide_idx + 1].save(NEXT_TEMPLATE_PATH, 'PNG')
-    
-    vidcap = cv2.VideoCapture(path.join(VIDEO_ROOT_PATH, 'sample1.mov'))
-    print(f'fps: {vidcap.get(cv2.CAP_PROP_FPS)}')
-    print(f'total frame: {vidcap.get(cv2.CAP_PROP_FRAME_COUNT)}')
-    
-    while slide_idx < len(pages):
-        if len(video_idx) != slide_idx:
-            slide_idx += 1
-            pages[slide_idx].save(CURRENT_TEMPLATE_PATH, 'PNG')
-            pages[slide_idx + 1].save(NEXT_TEMPLATE_PATH, 'PNG')
-        
-        success, frame = vidcap.read()
-        print(vidcap.get(cv2.CAP_PROP_POS_FRAMES))
-        if not success: break
-        target = Image.fromarray(np.uint8(frame))
-        print(target.height, target.width)
+    youtube_url = input('Input youtube url which begins with https://www.youtube.com/ : ')
+    #youtube_url = 'https://www.youtube.com/watch?v=le1NvGzDWDk&feature=youtu.be&t=1168'
+    youtube_url = 'https://www.youtube.com/watch?v=0E00Zuayv9Q'
+    yp = YoutubePing(youtube_url)
+    if not yp.isValidUrl:
+        print('Url you inputted is not valid.')
         exit()
-        cur_template = Image.fromarray(np.uint8(cv2.imread(CURRENT_TEMPLATE_PATH)))
-        next_template = Image.fromarray(np.uint8(cv2.imread(NEXT_TEMPLATE_PATH)))
-        if hdh.calcHammingDist(target, next_template) < hdh.calcHammingDist(target, cur_template):
-            video_idx.append(vidcap.get(cv2.CAP_PROP_POS_FRAMES))
-            print(f'idx is now {len(video_idx)}')
-        print(f'Dist {len(video_idx) - 1}: {hdh.calcHammingDist(target, cur_template)}, {len(video_idx)}: {hdh.calcHammingDist(target, next_template)}')
 
-    print(video_idx)
+    vh = VideoHandler(youtube_url)
+    vh.execute()
+    video_name = vh.getVideoName()
+    video_path = path.join(VIDEO_ROOT_PATH, video_name)
+
+    hdh = HashedDistHandler()
+    vidcap = cv2.VideoCapture(video_path)
+
+    while True:
+        success, cur_frame = vidcap.read()
+        if not success:
+            break
+        
+        frame = Image.fromarray(np.uint8(cur_frame))
+        if vidcap.get(cv2.CAP_PROP_POS_FRAMES) == 1:
+            hdh.setFrame(frame)
+            ref[vidcap.get(cv2.CAP_PROP_POS_FRAMES) / vidcap.get(cv2.CAP_PROP_FPS)] = hdh.getEncodedHash()
+            cv2.imwrite(IMG_PATH.format(video_name, len(ref) - 1), cur_frame)
+            continue
+        
+        if not hdh.isSameFrame(frame):
+            #print(vidcap.get(cv2.CAP_PROP_POS_FRAMES) / vidcap.get(cv2.CAP_PROP_FPS))
+            hdh.setFrame(frame)
+            ref[vidcap.get(cv2.CAP_PROP_POS_FRAMES) / vidcap.get(cv2.CAP_PROP_FPS)] = hdh.getEncodedHash()
+            cv2.imwrite(IMG_PATH.format(video_name, len(ref) - 1), cur_frame)
+
+    with open(path.join(SAMPLE_JSON_ROOT_PATH, f'{video_name}.json'), 'w') as f:
+        json.dump(ref, f)
+
+    with open(path.join(SAMPLE_JSON_ROOT_PATH, f'{video_name}_length.json'), 'w') as f:
+        json.dump({'length': len(ref)}, f)
